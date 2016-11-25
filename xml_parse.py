@@ -3,11 +3,13 @@ from bs4 import BeautifulSoup
 import csv
 import os
 from html_stats import stats
+import warnings
+import util
 
-DATA_FOLDER = 'data/'
+DATA_FOLDER = 'quick/'
 POSTS_FILENAME = 'Posts.xml'
 COMMENTS_FILENAME = 'Comments.xml'
-HEADER = ['Score', 'Characters', 'Citations', 'Total Tags']
+HEADER = ['Score', 'Characters']
 
 def getParseTrees(data_folder, filename):
     """ Gets all parse trees for all files named filename """
@@ -27,35 +29,53 @@ def getParseTrees(data_folder, filename):
                     + filename))
     return post_trees
 
+def soupify(body):
+    warnings.filterwarnings('error')
 
-print("...Loading trees")
-post_trees = getParseTrees(DATA_FOLDER, COMMENTS_FILENAME)
+    try:
+        return BeautifulSoup(body, 'html.parser')
+    except UserWarning: # Hides a `just a url` printout from BeautifulSoup
+        return BeautifulSoup(body, 'html.parser')
 
-print("Created all trees")
+def countCitations(body):
+    """ Returns the total citations (links) that are in the text """
 
-total = 0
+    warnings.filterwarnings('error')
+    try:
+        soup = BeautifulSoup(body, 'html.parser') #TODO: maybe move out? slowwww
+        return len(soup.find_all('a')) # Get all links
+    except UserWarning:
+        print 'Hey', body
+        return 1
 
-with open('data.csv', 'wb') as csvfile:
-    csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(HEADER)
+def writeToCSV(post_trees):
+    total = 0
+    with open('data.csv', 'wb') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow(HEADER)
 
-    for tree in post_trees:
-        root = tree.getroot()
-        for row in root.iter('row'):
-            total += 1 # count totals
+        for tree in post_trees:
+            root = tree.getroot()
+            for row in root.iter('row'):
+                total += 1 # count totals
 
-            # Count characters
-            body = row.get('Text')
-            characters = len(body)
+                # Count characters
+                body = row.get('Text')
+                characters = len(body)
 
-            # Count votes
-            score = row.get('Score')
+                # Count votes
+                score = row.get('Score')
 
-            # Count citations
-            soup = BeautifulSoup(body, 'html.parser')
-            citations = len(soup.find_all('a')) # Get all links
+                # Write to csv
+                csv_writer.writerow([score, characters])
 
-            total_tags = stats(body)
+def main():
+    print("...Loading trees")
+    post_trees = getParseTrees(DATA_FOLDER, COMMENTS_FILENAME)
 
-            # Write to csv
-            csv_writer.writerow([score, characters, citations, total_tags])
+    print("Created all trees")
+
+    writeToCSV(post_trees)
+
+if __name__ == "__main__":
+    main()
