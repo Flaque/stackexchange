@@ -1,17 +1,19 @@
 import _mysql
 import codecs
 
-def insert_question(db, sitename, stackexchange_id, score, view_count, body):
+def insert_question(db, sitename, stackexchange_id, score, view_count,
+    body, links, tags, word_count):
     query = """
         INSERT INTO Questions
             SET site_id=(
                     SELECT id FROM Sites WHERE sitename='%s'
                 ),
-                stackexchange_id='%s', score='%s', view_count='%s', body='%s'
+                stackexchange_id='%s', score='%s', view_count='%s', body='%s',
+                links='%s', tags='%s', words='%s'
     """
     body = body.encode('utf-8')
     db.query(query % (sitename, stackexchange_id, score, view_count,
-    _mysql.escape_string(body)))
+    _mysql.escape_string(body), links, tags, word_count))
 
 def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id, score, body):
     query = """

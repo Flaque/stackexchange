@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import csv
 import os
-from html_stats import stats
+import html_stats as stats
 import warnings
 import util
 import toMySQL
@@ -49,9 +49,12 @@ def populateQuestions(data_folder):
                     score = post.get('Score')
                     view_count = post.get('ViewCount')
                     body = post.get('Body')
+                    links = stats.links(body)
+                    tags = stats.tags(body)
+                    word_count = stats.word_count(body)
 
                     toMySQL.insert_question(db, sitename, stackexchange_id,
-                        score, view_count, body)
+                        score, view_count, body, links, tags, word_count)
 
         else:
             print 'ERROR: Posts.xml not found in', sitename
@@ -83,7 +86,6 @@ def populateAnswers(data_folder):
             print 'ERROR: Posts.xml not found in', sitename
 
 if __name__ == "__main__":
-    pass
-    # populateSites(DATA_FOLDER)
-    # populateQuestions(DATA_FOLDER)
+    populateSites(DATA_FOLDER)
+    populateQuestions(DATA_FOLDER)
     # populateAnswers(DATA_FOLDER)

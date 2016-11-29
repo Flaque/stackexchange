@@ -10,6 +10,9 @@ create table Questions (
 	stackexchange_id INT NOT NULL,
 	score INT,
 	view_count INT,
+	tags INT,
+	links INT,
+	words INT,
 	body BLOB,
 	PRIMARY KEY (id),
 	FOREIGN KEY (site_id)
