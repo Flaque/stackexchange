@@ -14,6 +14,7 @@ create table Questions (
 	PRIMARY KEY (id),
 	FOREIGN KEY (site_id)
 		REFERENCES Sites(id)
+		ON DELETE CASCADE
 );
 
 create table Answers (
@@ -25,4 +26,5 @@ create table Answers (
 	PRIMARY KEY (id),
 	FOREIGN KEY (question_id)
 		REFERENCES Questions(id)
+		ON DELETE CASCADE
 );
