@@ -1,4 +1,5 @@
 import _mysql
+import codecs
 
 def insert_question(db, sitename, stackexchange_id, score, view_count, body):
     query = """
@@ -8,7 +9,9 @@ def insert_question(db, sitename, stackexchange_id, score, view_count, body):
                 ),
                 stackexchange_id='%s', score='%s', view_count='%s', body='%s'
     """
-    db.query(query % (sitename, stackexchange_id, score, view_count, body))
+    body = body.encode('utf-8')
+    db.query(query % (sitename, stackexchange_id, score, view_count,
+    _mysql.escape_string(body)))
 
 def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id, score, body):
     query = """
@@ -21,7 +24,11 @@ def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id, sco
             ),
             stackexchange_id='%s', score='%s', body='%s'
     """
-    db.query(query % (question_stackexchange_id, sitename, stackexchange_id, score, body))
+    body = body.encode('utf-8')
+    filled_query = query % (question_stackexchange_id, sitename,
+        stackexchange_id, score, _mysql.escape_string(body))
+
+    db.query(filled_query)
 
 def insert_site(db, name):
     query = 'INSERT INTO Sites (sitename) VALUES ("%s");' % (name)
