@@ -27,13 +27,21 @@ def insert_site(db, name):
     query = 'INSERT INTO Sites (sitename) VALUES ("%s");' % (name)
     db.query(query)
 
+def bulk_insert_site(db, names):
+    query = 'INSERT INTO Sites (sitename) VALUES ("%s")'
+    for i in range(1, len(names)):
+        query += ' ,("%s")'
+
+    db.query(query % tuple(names))
+
 def connect():
     return _mysql.connect(host='localhost', user='root', db='stackexchange')
 
-def main():
+def _main():
     db = connect()
     #insert_site(db, 'testtwo')
     #insert_question(db, 'testtwo', 1, 10, 100, 'hey there bro whats up?')
     #insert_answer(db, 'testtwo', 1, 2, 10, 'not much man')
 
-main()
+
+_main()
