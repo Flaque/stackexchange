@@ -15,7 +15,8 @@ def insert_question(db, sitename, stackexchange_id, score, view_count,
     db.query(query % (sitename, stackexchange_id, score, view_count,
     _mysql.escape_string(body), links, tags, word_count))
 
-def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id, score, body):
+def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id,
+    score, body, tags, links, words):
     query = """
         INSERT INTO Answers
             SET question_id=(
@@ -24,11 +25,13 @@ def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id, sco
                     SELECT id FROM Sites WHERE sitename='%s'
                 )
             ),
-            stackexchange_id='%s', score='%s', body='%s'
+            stackexchange_id='%s', score='%s', body='%s', tags='%s', links='%s',
+            words='%s'
+
     """
     body = body.encode('utf-8')
     filled_query = query % (question_stackexchange_id, sitename,
-        stackexchange_id, score, _mysql.escape_string(body))
+        stackexchange_id, score, _mysql.escape_string(body), tags, links, words)
 
     db.query(filled_query)
 

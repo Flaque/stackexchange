@@ -26,6 +26,9 @@ create table Answers (
 	stackexchange_id INT NOT NULL,
 	score INT,
 	body BLOB,
+	tags INT,
+	links INT,
+	words INT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (question_id)
 		REFERENCES Questions(id)

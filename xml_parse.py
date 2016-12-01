@@ -80,12 +80,16 @@ def populateAnswers(data_folder):
                     question_id = post.get('ParentId')
                     body = post.get('Body')
 
+                    links = stats.links(body)
+                    tags = stats.tags(body)
+                    word_count = stats.word_count(body)
+
                     toMySQL.insert_answer(db, sitename, question_id,
-                        stackexchange_id, score, body)
+                        stackexchange_id, score, body, tags, links, word_count)
         else:
             print 'ERROR: Posts.xml not found in', sitename
 
 if __name__ == "__main__":
     populateSites(DATA_FOLDER)
     populateQuestions(DATA_FOLDER)
-    # populateAnswers(DATA_FOLDER)
+    populateAnswers(DATA_FOLDER)
