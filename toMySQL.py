@@ -1,4 +1,4 @@
-import _mysql
+import MySQLdb
 import codecs
 
 def insert_question(db, sitename, stackexchange_id, score, view_count,
@@ -6,54 +6,69 @@ def insert_question(db, sitename, stackexchange_id, score, view_count,
     query = """
         INSERT INTO Questions
             SET site_id=(
-                    SELECT id FROM Sites WHERE sitename='%s'
+                    SELECT id FROM Sites WHERE sitename=%s
                 ),
-                stackexchange_id='%s', score='%s', view_count='%s', body='%s',
-                links='%s', tags='%s', words='%s'
+                stackexchange_id=%s, score=%s, view_count=%s, body=%s,
+                links=%s, tags=%s, words=%s
     """
     body = body.encode('utf-8')
-    db.query(query % (sitename, stackexchange_id, score, view_count,
-    _mysql.escape_string(body), links, tags, word_count))
+    cursor = db.cursor()
+    cursor.execute(query, (sitename, stackexchange_id, score, view_count,
+        body, links, tags, word_count))
 
 def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id,
     score, body, tags, links, words):
     query = """
         INSERT INTO Answers
             SET question_id=(
-                SELECT id FROM Questions WHERE stackexchange_id='%s'
+                SELECT id FROM Questions WHERE stackexchange_id=%s
                 AND site_id= (
-                    SELECT id FROM Sites WHERE sitename='%s'
+                    SELECT id FROM Sites WHERE sitename=%s
                 )
             ),
-            stackexchange_id='%s', score='%s', body='%s', tags='%s', links='%s',
-            words='%s'
+            stackexchange_id=%s, score=%s, body=%s, tags=%s, links=%s,
+            words=%s
 
     """
     body = body.encode('utf-8')
-    filled_query = query % (question_stackexchange_id, sitename,
-        stackexchange_id, score, _mysql.escape_string(body), tags, links, words)
-
-    db.query(filled_query)
+    cursor = db.cursor()
+    cursor.execute(query, (question_stackexchange_id, sitename,
+        stackexchange_id, score, body, tags, links,
+        words))
 
 def insert_site(db, name):
     query = 'INSERT INTO Sites (sitename) VALUES ("%s");' % (name)
-    db.query(query)
+    cursor = db.cursor()
+    cursor.execute(query)
 
 def bulk_insert_site(db, names):
-    query = 'INSERT INTO Sites (sitename) VALUES ("%s")'
+    query = 'INSERT INTO Sites (sitename) VALUES (%s)'
     for i in range(1, len(names)):
-        query += ' ,("%s")'
+        query += ' ,(%s)'
 
-    db.query(query % tuple(names))
+    cursor = db.cursor()
+    cursor.execute(query, tuple(names))
+
+def update_similar_answer(db, id, similarity):
+    query = 'UPDATE Answers SET similarity="%s" WHERE id="%s"'
+    db.query(query % (similarity, id))
+
+# def get_question_answers(db):
+#     query = """ SELECT Questions.body as question_body, Answers.body
+#         as answer_body FROM Answers
+#         JOIN Questions ON Answers.question_id=Questions.id """
+#
+#     cursor = db.cursor()
+#     cursor.execute(query)
+#     return cursor
 
 def connect():
-    return _mysql.connect(host='localhost', user='root', db='stackexchange')
+    return MySQLdb.connect(host='localhost', user='root', db='stackexchange')
 
-def _main():
+def _test():
     db = connect()
-    #insert_site(db, 'testtwo')
-    #insert_question(db, 'testtwo', 1, 10, 100, 'hey there bro whats up?')
-    #insert_answer(db, 'testtwo', 1, 2, 10, 'not much man')
-
-
-_main()
+    insert_site(db, 'testtwo')
+    insert_question(db, 'testtwo', 1, 10, 100, 'hey there bro whats up?',
+        0, 0, 0)
+    insert_answer(db, 'testtwo', 1, 2, 10, 'not much man', 0,0,0)
+    db.commit()

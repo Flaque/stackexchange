@@ -29,6 +29,7 @@ create table Answers (
 	tags INT,
 	links INT,
 	words INT,
+	similarity REAL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (question_id)
 		REFERENCES Questions(id)

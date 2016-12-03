@@ -12,10 +12,9 @@ POST_TYPE = {
     'answer'   : 2
 }
 
-DATA_FOLDER = 'quick/'
 POSTS_FILENAME = 'Posts.xml'
 
-def populateSites(data_folder):
+def populateSites(db, data_folder):
 
     folders = []
     for folder in os.listdir(data_folder):
@@ -26,12 +25,9 @@ def populateSites(data_folder):
 
         folders.append(folder)
 
-    db = toMySQL.connect()
     toMySQL.bulk_insert_site(db, folders)
 
-def populateQuestions(data_folder):
-
-    db = toMySQL.connect()
+def populateQuestions(db, data_folder):
 
     for sitename in os.listdir(data_folder):
 
@@ -59,9 +55,7 @@ def populateQuestions(data_folder):
         else:
             print 'ERROR: Posts.xml not found in', sitename
 
-def populateAnswers(data_folder):
-
-    db = toMySQL.connect()
+def populateAnswers(db, data_folder):
 
     for sitename in os.listdir(data_folder):
 
@@ -88,8 +82,3 @@ def populateAnswers(data_folder):
                         stackexchange_id, score, body, tags, links, word_count)
         else:
             print 'ERROR: Posts.xml not found in', sitename
-
-if __name__ == "__main__":
-    populateSites(DATA_FOLDER)
-    populateQuestions(DATA_FOLDER)
-    populateAnswers(DATA_FOLDER)
