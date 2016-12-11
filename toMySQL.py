@@ -53,14 +53,14 @@ def update_similar_answer(db, id, similarity):
     query = 'UPDATE Answers SET similarity="%s" WHERE id="%s"'
     db.query(query % (similarity, id))
 
-# def get_question_answers(db):
-#     query = """ SELECT Questions.body as question_body, Answers.body
-#         as answer_body FROM Answers
-#         JOIN Questions ON Answers.question_id=Questions.id """
-#
-#     cursor = db.cursor()
-#     cursor.execute(query)
-#     return cursor
+def get_question_answers(db):
+    query = """ SELECT Questions.id, Questions.body, Answers.id, Answers.body
+        FROM Answers
+        JOIN Questions ON Answers.question_id=Questions.id """
+
+    cursor = db.cursor()
+    cursor.execute(query)
+    return cursor
 
 def connect():
     return MySQLdb.connect(host='localhost', user='root', db='stackexchange')

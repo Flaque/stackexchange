@@ -28,6 +28,7 @@ def weight_vector(document, documents):
     return [id_idf(term, document, documents) for term in document.split(' ')]
 
 def sim(document, query):
+    document, query = strip_text(document), strip_text(query)
     both = [document, query]
     document_vector = weight_vector(document, both)
     query_vector = weight_vector(query, both)
@@ -41,15 +42,9 @@ def strip_text(text):
     rx = re.compile('\W+')
     return rx.sub(' ', text).strip()
 
-def parse_documents(corpus_file):
-    documents = []
-    for line in corpus_file:
-        documents.append(strip_text(line))
-    return documents
-
-def main():
+def _test():
     with open('test_corpus.txt', 'r') as _corpus:
-        documents = parse_documents(_corpus)
+        documents = [line for line in _corpus]
 
         sims = []
         for i in range(0, len(documents)):
@@ -57,5 +52,3 @@ def main():
                 sims.append(sim(documents[i], documents[j]))
 
         print sorted(sims)
-
-main()
