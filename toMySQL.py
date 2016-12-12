@@ -1,6 +1,10 @@
 import MySQLdb
 import codecs
 
+host = "localhost"
+user = "root"
+database = "stackexchange"
+
 def insert_question(db, sitename, stackexchange_id, score, view_count,
     body):
     query = """
@@ -76,7 +80,7 @@ def get_question_answers(db):
     return cursor
 
 def connect():
-    return MySQLdb.connect(host='localhost', user='root', db='stackexchange')
+    return MySQLdb.connect(host=host, user=user, db=database)
 
 def _test():
     db = connect()
