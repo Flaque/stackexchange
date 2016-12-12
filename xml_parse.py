@@ -6,6 +6,7 @@ import html_stats as stats
 import warnings
 import util
 import toMySQL
+import sys
 
 POST_TYPE = {
     'question' : 1,
@@ -45,12 +46,9 @@ def populateQuestions(db, data_folder):
                     score = post.get('Score')
                     view_count = post.get('ViewCount')
                     body = post.get('Body')
-                    links = stats.links(body)
-                    tags = stats.tags(body)
-                    word_count = stats.word_count(body)
 
                     toMySQL.insert_question(db, sitename, stackexchange_id,
-                        score, view_count, body, links, tags, word_count)
+                        score, view_count, body)
 
         else:
             print 'ERROR: Posts.xml not found in', sitename
@@ -74,11 +72,7 @@ def populateAnswers(db, data_folder):
                     question_id = post.get('ParentId')
                     body = post.get('Body')
 
-                    links = stats.links(body)
-                    tags = stats.tags(body)
-                    word_count = stats.word_count(body)
-
                     toMySQL.insert_answer(db, sitename, question_id,
-                        stackexchange_id, score, body, tags, links, word_count)
+                        stackexchange_id, score, body)
         else:
             print 'ERROR: Posts.xml not found in', sitename

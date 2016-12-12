@@ -2,22 +2,21 @@ import MySQLdb
 import codecs
 
 def insert_question(db, sitename, stackexchange_id, score, view_count,
-    body, links, tags, word_count):
+    body):
     query = """
         INSERT INTO Questions
             SET site_id=(
                     SELECT id FROM Sites WHERE sitename=%s
                 ),
-                stackexchange_id=%s, score=%s, view_count=%s, body=%s,
-                links=%s, tags=%s, words=%s
+                stackexchange_id=%s, score=%s, view_count=%s, body=%s
     """
     body = body.encode('utf-8')
     cursor = db.cursor()
     cursor.execute(query, (sitename, stackexchange_id, score, view_count,
-        body, links, tags, word_count))
+        body))
 
 def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id,
-    score, body, tags, links, words):
+    score, body):
     query = """
         INSERT INTO Answers
             SET question_id=(
@@ -26,15 +25,13 @@ def insert_answer(db, sitename, question_stackexchange_id, stackexchange_id,
                     SELECT id FROM Sites WHERE sitename=%s
                 )
             ),
-            stackexchange_id=%s, score=%s, body=%s, tags=%s, links=%s,
-            words=%s
+            stackexchange_id=%s, score=%s, body=%s
 
     """
     body = body.encode('utf-8')
     cursor = db.cursor()
     cursor.execute(query, (question_stackexchange_id, sitename,
-        stackexchange_id, score, body, tags, links,
-        words))
+        stackexchange_id, score, body))
 
 def insert_site(db, name):
     query = 'INSERT INTO Sites (sitename) VALUES ("%s");' % (name)
@@ -52,6 +49,22 @@ def bulk_insert_site(db, names):
 def update_similar_answer(db, id, similarity):
     query = 'UPDATE Answers SET similarity="%s" WHERE id="%s"'
     db.query(query % (similarity, id))
+
+def update_features(db, answer_id, valuesDict):
+    query = """ UPDATE Answers SET
+            similarity=%s,
+            entities=%s,
+            sentences=%s,
+            link_ratio=%s,
+            tag_ratio=%s
+        WHERE id = %s
+    """
+
+    cursor = db.cursor()
+    cursor.execute(query, (valuesDict['similarity'],
+        valuesDict['entities'], valuesDict['sentences'],
+        valuesDict['link_ratio'], valuesDict['tag_ratio'], answer_id))
+
 
 def get_question_answers(db):
     query = """ SELECT Questions.id, Questions.body, Answers.id, Answers.body

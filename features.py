@@ -1,5 +1,7 @@
 from spacy.en import English
+import sys
 import html_stats as html
+print "...Loading English Corpus (this may take a minute)"
 parser = English()
 
 def answer(question, answer):
@@ -10,8 +12,8 @@ def answer(question, answer):
     tag_ratio = html.tag_ratio(answer)
 
     # Spacy doesn't like non-unicode inputs
-    question = unicode(question)
-    answer = unicode(answer)
+    question = question.decode("utf-8")
+    answer = answer.decode("utf-8")
 
     # Parse out the question and answer
     question_doc = parser(question)

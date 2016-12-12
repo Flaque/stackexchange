@@ -10,9 +10,6 @@ create table Questions (
 	stackexchange_id INT NOT NULL,
 	score INT,
 	view_count INT,
-	tags INT,
-	links INT,
-	words INT,
 	body BLOB,
 	PRIMARY KEY (id),
 	FOREIGN KEY (site_id)
@@ -26,9 +23,10 @@ create table Answers (
 	stackexchange_id INT NOT NULL,
 	score INT,
 	body BLOB,
-	tags INT,
-	links INT,
-	words INT,
+	entities INT,
+	sentences INT,
+	link_ratio REAL,
+	tag_ratio REAL,
 	similarity REAL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (question_id)
