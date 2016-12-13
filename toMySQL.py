@@ -79,6 +79,18 @@ def get_question_answers(db):
     cursor.execute(query)
     return cursor
 
+def get_answers(db, site=False):
+    query = """ SELECT score, link_ratio, entities, sentences,
+        tag_ratio, similarity
+        FROM Answers"""
+
+    if site:
+        query += ("""WHERE site='%s'""" % site)
+
+    cursor = db.cursor()
+    cursor.execute(query)
+    return cursor
+
 def connect():
     return MySQLdb.connect(host=host, user=user, db=database)
 
