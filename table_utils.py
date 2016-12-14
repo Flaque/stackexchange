@@ -1,4 +1,5 @@
 import itertools
+import numpy
 
 def _validRow(row, where):
     """ Returns True if row matches where
@@ -37,6 +38,11 @@ def getCol(table, index):
         col.append(row[index])
     return col
 
+def setCol(table, colIndex, col):
+    for i, row in enumerate(table):
+        row[colIndex] = col[i]
+    return table
+
 def mapCol(table, colIndex, function):
     """ Applys the function to every item in the column """
     for row in table:
@@ -65,20 +71,23 @@ def _cutoffs(table, col_index, num_bins):
     width   = int(max_val - min_val) / num_bins
     return list(range(min_val + width, max_val + 1, width))
 
-def _bin(array, splits):
-    bins = []
-    for split in splits:
-        bins.append(array[:array.index(split)])
-        array[:array.index(split)] = [] #remove that section of array
-    if array:
-        bins.append(array)
-    return bins
+def discretize_column(table, colIndex, num_bins):
+    col = getCol(table, colIndex)
+    bins = numpy.linspace(min(col), max(col), num_bins)
+    ranks = numpy.digitize(col, bins)
+    return setCol(table, colIndex, ranks)
 
-def bin_table_col(table, col_index, num_bins):
-    cuts = _cutoffs(table, col_index, num_bins)
-    tableSorted = table.sort(key=lambda x: x[col_index])
+def discretize_table(table, columns):
+    """ Discretizes a table for all the columns listed.
+    :param table
+    :param columns - A list of tuples of (index, number_of_bins)
+    """
 
-
+    for index, bins in columns:
+        table = discretize_column(table, index, bins)
+    return table
 
 if __name__ == "__main__":
-    print _bin([1,2,3,4,5], [2, 4])
+    table = [[1, 4],[5, 3.023],[4, 100]]
+
+    print discretize_table(table, [(0, 2), (1, 2)])

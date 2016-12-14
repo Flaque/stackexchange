@@ -80,8 +80,7 @@ def get_question_answers(db):
     return cursor
 
 def get_answers(db, site=False):
-    query = """ SELECT score, link_ratio, entities, sentences,
-        tag_ratio, similarity
+    query = """ SELECT score, link_ratio, tag_ratio, entities, sentences, similarity
         FROM Answers"""
 
     if site:
