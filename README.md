@@ -1,5 +1,8 @@
 # stackexchange
-A data science project to answer the question: "How do you write a good answer to a question?"
+A data science project to answer the question:
+"How do you write a good answer to a question?"
+
+![Science](http://i.imgur.com/gwWOXhw.jpg)
 
 ## Setup
 
