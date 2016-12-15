@@ -12,6 +12,8 @@ import time
 from naive_bayes import naive_bayes
 import os
 import random_forest
+import logging
+import output
 
 SCORE_INDEX = 0
 OUTPUT = 'output/'
@@ -20,14 +22,14 @@ def discretize_score(table, bins):
     table = discretize_column(table, SCORE_INDEX, bins)
     return table
 
-def read():
+def read(limit):
     db = toMySQL.connect()
-    table = [list(results) for results in toMySQL.get_answers(db)]
+    table = [list(results) for results in toMySQL.get_answers(db, limit)]
     db.commit()
     return table
 
 
-def print_confusion_matrix(labels, class_label_name):
+def confusion_matrix(labels, class_label_name):
     """ Prints the confusion matrix of the given labels
 
     :param labels: A list of tuples of class labels [(actual, predicted),...]
@@ -39,16 +41,16 @@ def print_confusion_matrix(labels, class_label_name):
     the_headers.extend(['Total', 'Recognition (%)'])
 
     # makes an table filled with zeros of #columns = len(the_headers) and #rows = len(class_labels)
-    confusion_matrix = [[0] * len(the_headers) for i in range(len(class_labels))]
+    _confusion_matrix = [[0] * len(the_headers) for i in range(len(class_labels))]
 
     # fills out the confusion matrix with the predicted vs. actual
     for a_label_point in labels:
         actual, predicted = a_label_point
-        confusion_matrix[class_labels.index(actual)][the_headers.index(predicted)] += 1
+        _confusion_matrix[class_labels.index(actual)][the_headers.index(predicted)] += 1
 
     # add the rest of the values to the confusion matrix
-    for i in range(len(confusion_matrix)):
-        row = confusion_matrix[i]  # current row
+    for i in range(len(_confusion_matrix)):
+        row = _confusion_matrix[i]  # current row
 
         # adding total to the confusion matrix
         total = sum(row)
@@ -62,8 +64,7 @@ def print_confusion_matrix(labels, class_label_name):
         recognition *= 100
         row[the_headers.index('Recognition (%)')] = recognition
 
-    # prints the table
-    print tabulate(confusion_matrix, headers = the_headers, tablefmt="rst")
+    logging.info('\n' + str(tabulate(_confusion_matrix, headers = the_headers, tablefmt="rst")))
 
 def summary(table):
     header = ["Attributes", "Min", "Max", "Mean", "Median"]
@@ -74,7 +75,7 @@ def summary(table):
         col = getCol(table, i)
         summaryTable.append([att, min(col), max(col), mean(col), median(col)])
 
-    print tabulate(summaryTable, headers="firstrow", tablefmt="fancy")
+    logging.info('\n' + str(tabulate(summaryTable, headers="firstrow", tablefmt="fancy")))
 
 def run_KNN(table, k):
 
@@ -86,37 +87,19 @@ def run_KNN(table, k):
 
     return labels
 
-def test_KNN(table, maxK, maxBins):
-    print "\n# Testing KNN"
-    toTabulate = [["Attempt Number", "K", "Bins", "Accuracy", "Time in Seconds"]]
+def test_KNN(table, k):
 
     # Test KNN for several variations of K.
-
-    attempt = 1
-    for bins in range(1, maxBins):
-
-        # Discretize the scores
-        discrete_table = discretize_score(table, bins=bins)
-
-        # Run several variations of K
-        for k in range(1, maxK):
-            start = time.time()
-            labels = run_KNN(discrete_table, k)
-            acc = accuracy(labels)
-
-            print "## Attempt Number", attempt
-            print_confusion_matrix(labels, 'score')
-            print '\n'
-            toTabulate.append([k, bins, acc, str(time.time() - start) + "s"])
-            attempt += 1
-
-    print tabulate(toTabulate, headers="firstrow", tablefmt="simple")
+    output.update("... Testing KNN")
+    logging.info("KNN report")
+    start = time.time()
+    labels = run_KNN(table, k)
+    confusion_matrix(labels, 'score')
+    logging.info('KNN at k=%s has %s accuracy in %s seconds' %
+        (k, accuracy(labels), str(time.time() - start)))
 
 def run_bayes(table):
-    print "... Running Bayes"
-
-    # Discretize the scores
-    discrete_table = discretize_score(table, bins=6)
+    logging.info("... Running Bayes")
 
     test, training = holdout(normalize_table(table, [0]))
 
@@ -124,13 +107,16 @@ def run_bayes(table):
     return labels
 
 def test_bayes(table):
-    print '\n# Testing Naive Bayes'
+    logging.info('\n# Testing Naive Bayes')
+
+    discrete_table = discretize_table(table, [(1, 10), (2, 10), (3, 10), (4, 10), (5, 10)])
 
     start = time.time()
-    labels = run_bayes(table)
-    print "Time in Seconds:", str(time.time() - start) + "s"
-    print_confusion_matrix(labels, 'score')
-    print "\nAccuracy:", accuracy(labels)
+    labels = run_bayes(discrete_table)
+    output.update("... Running Naive Bayes")
+    logging.info("Time in Seconds:" + str(time.time() - start) + "s")
+    confusion_matrix(labels, 'score')
+    logging.info("\nAccuracy:" + str(accuracy(labels)))
 
 def run_forest(table, N, M, F):
     indices = [1, 2, 3, 4, 5]
@@ -138,50 +124,54 @@ def run_forest(table, N, M, F):
     return labels
 
 def test_forest(table, maxN):
-    print '\n# Testing Random Forest'
+    logging.info('\n# Testing Random Forest')
 
     toTabulate = [["Attempt Number", "N", "M", "F", "Accuracy", "Time in Seconds"]]
     attempt = 1
 
     for n in range(1, maxN):
+        output.update("... Running Trees for n=%s" % n)
         for m in range(1, n):
             for f in range(1, 4):
-
                 start = time.time()
                 labels = run_forest(table, n, m, f)
                 toTabulate.append([attempt, n, m, f, accuracy(labels), \
                     str(time.time() - start) + 's'])
                 attempt += 1
 
-    print tabulate(toTabulate, headers="firstrow", tablefmt="fancy")
+    logging.info('\n' + str(tabulate(toTabulate, headers="firstrow", tablefmt="fancy")))
 
-def main():
+def main(arg):
 
+    # Create log file
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
-
-    # Record our output to an output.txt file
-    original_stdout = sys.stdout
-    f = file(OUTPUT + 'output' + str(time.time()) + '.txt', 'w')
-    sys.stdout = f
+    logging.basicConfig(filename=OUTPUT + 'output-' + str(time.time()) + '.txt', level=logging.INFO)
 
     # Read table from MySQL
-    table = read()
+    table = read(arg)
 
     # Generate summary data
     summary(table)
-    #genPlots(table)
+    genPlots(table)
 
-    test_forest(table, 1000)
-
-    # Test a Naive Bayes Classifier
-    #test_bayes(table)
+    table = discretize_score(table, bins=3)
 
     # Test a KNN Classifier
-    #test_KNN(table, maxK=5, maxBins=15)
+    test_KNN(table, 5)
 
-    # Close file and reset stdout
-    sys.stdout = original_stdout
-    f.close()
+    # Test a Naive Bayes Classifier
+    test_bayes(table)
 
-main()
+    # Test forest
+    test_forest(table, 10)
+
+    output.update(" " * 20)
+    output.update("---> Finished.")
+
+if __name__ == "__main__":
+
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        main(800)

@@ -10,7 +10,9 @@ def firstPass():
     print "## Attempting to populate the question and answer content."
     db = toMySQL.connect()
     xml_parse.populateSites(db, DATA_FOLDER)
+    db.commit()
     xml_parse.populateQuestions(db, DATA_FOLDER)
+    db.commit()
     xml_parse.populateAnswers(db, DATA_FOLDER)
     db.commit()
 

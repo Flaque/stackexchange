@@ -1,5 +1,6 @@
 import table_utils
 import math_utils as math
+import output
 
 def _applyGaussian(table, indices):
     for index in indices:
@@ -95,7 +96,8 @@ def convertToInstance(row):
 
 def naive_bayes(training, test, label_index, contIndices=[]):
     labels = []
-    for row in test:
+    for index, row in enumerate(test):
+        output.update("... Running Naive Bayes on Instance #%s" % index)
         instance = convertToInstance(row)
         predicted, prob = predict_label(training, instance, label_index, contIndices)
         actual = row[label_index]

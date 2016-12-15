@@ -79,12 +79,22 @@ def get_question_answers(db):
     cursor.execute(query)
     return cursor
 
-def get_answers(db, site=False):
-    query = """ SELECT score, link_ratio, tag_ratio, entities, sentences, similarity
-        FROM Answers"""
+def get_answers(db, limit=5000):
 
-    if site:
-        query += ("""WHERE site='%s'""" % site)
+    # Query gives a kind-of more distributed approach to counts
+    # query = """ SELECT a.score, a.link_ratio, a.tag_ratio, a.entities, a.sentences, a.similarity
+    #     FROM (
+    #         select score, count(*) as occurrences from answers group by score
+    #     ) as stats
+    #     inner join answers a
+    #     	on a.score = stats.score
+    #     order by rand() * stats.occurrences
+    #     limit %s """ % (limit)
+    #
+    query = """ SELECT score, link_ratio, tag_ratio, entities, sentences, similarity
+    FROM Answers
+    limit %s """ % (limit)
+
 
     cursor = db.cursor()
     cursor.execute(query)

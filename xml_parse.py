@@ -7,6 +7,7 @@ import warnings
 import util
 import toMySQL
 import sys
+import output
 
 POST_TYPE = {
     'question' : 1,
@@ -18,13 +19,17 @@ POSTS_FILENAME = 'Posts.xml'
 def populateSites(db, data_folder):
 
     folders = []
+    count = 0
     for folder in os.listdir(data_folder):
 
         # Avoid weird .DS_store's on macs
         if not os.path.isdir(data_folder + folder):
             continue
 
+        output.update("...Popluating site %s" % count)
+
         folders.append(folder)
+        count+=1
 
     toMySQL.bulk_insert_site(db, folders)
 
@@ -40,6 +45,7 @@ def populateQuestions(db, data_folder):
             tree = ET.parse(data_folder + sitename + '/Posts.xml')
             root = tree.getroot() #GROOT
 
+            count = 0
             for post in root.iter('row'):
                 if int(post.get('PostTypeId')) == POST_TYPE['question']:
                     stackexchange_id = post.get('Id')
@@ -47,8 +53,12 @@ def populateQuestions(db, data_folder):
                     view_count = post.get('ViewCount')
                     body = post.get('Body')
 
+
+                    output.update("...Popluating question %s" % count)
+
                     toMySQL.insert_question(db, sitename, stackexchange_id,
                         score, view_count, body)
+                    count += 1
 
         else:
             print 'ERROR: Posts.xml not found in', sitename
@@ -65,6 +75,7 @@ def populateAnswers(db, data_folder):
             tree = ET.parse(data_folder + sitename + '/Posts.xml')
             root = tree.getroot() #GROOT
 
+            count = 0
             for post in root.iter('row'):
                 if int(post.get('PostTypeId')) == POST_TYPE['answer']:
                     stackexchange_id = post.get('Id')
@@ -72,7 +83,9 @@ def populateAnswers(db, data_folder):
                     question_id = post.get('ParentId')
                     body = post.get('Body')
 
+                    output.update("...Popluating Answer %s" % count)
                     toMySQL.insert_answer(db, sitename, question_id,
                         stackexchange_id, score, body)
+                    count +=1
         else:
             print 'ERROR: Posts.xml not found in', sitename

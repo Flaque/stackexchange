@@ -1,6 +1,7 @@
 import table_utils
 import numpy
 from random import randint
+import output
 
 
 def _get_top_k(row_distances, k):
@@ -114,7 +115,7 @@ def knn(training, test, k, class_index):
     """
 
     labels = []
-    for instance in test:
+    for index, instance in enumerate(test):
         actual = instance[class_index]
         predicted = get_label_k_nn(training, instance,  k, class_index)
         labels.append((actual,predicted))
